@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ───────────────────────────────
+   🌈 Base Theme Variables
+   ─────────────────────────────── */
+:root {
+  /* Background & Foreground */
+  --background: #ffffff;
+  --foreground: #171717;
+
+  /* UI Colors */
+  --primary-foreground: #0f172a;
+  --secondary: #f1f5f9;
+  --border: rgba(0, 0, 0, 0.12);
+
+  /* Chart Palette (used in Hero + Navbar gradients) */
+  --chart-1: #f43f5e;
+  /* rose / red */
+  --chart-2: #38bdf8;
+  /* sky blue */
+  --chart-3: #10b981;
+  /* emerald green */
+  --chart-4: #818cf8;
+  /* indigo */
+  --chart-5: #facc15;
+  /* amber / yellow */
+}
+
+/* ───────────────────────────────
+   🌑 Dark Mode Overrides
+   ─────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+
+    --primary-foreground: #ffffff;
+    --secondary: #1e293b;
+    --border: rgba(255, 255, 255, 0.15);
+
+    /* Slightly brighter tints for dark mode */
+    --chart-1: #fb7185;
+    --chart-2: #38bdf8;
+    --chart-3: #34d399;
+    --chart-4: #a5b4fc;
+    --chart-5: #fde047;
+  }
+}
+
+/* ───────────────────────────────
+   🎨 Tailwind Theme Mappings
+   ─────────────────────────────── */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ───────────────────────────────
+   🧠 Global Styles
+   ─────────────────────────────── */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Optional – smooth link hover transitions */
+a {
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Apply to all scrollable elements */
+::-webkit-scrollbar {
+  width: 10px;
+  /* width of vertical scrollbar */
+  height: 10px;
+  /* height of horizontal scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  /* track color */
+  border-radius: 8px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #161f68, hsl(240, 27%, 48%));
+  /* thumb gradient */
+  border-radius: 8px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  /* optional border for spacing */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #544fb2, #534f9b);
+  /* hover effect */
+}

@@ -1,0 +1,1 @@
+{ "name": "portfolio", "version": "1.0.0", "scripts": { "start": "parcel index.html", "build": "parcel build index.html" }, "dependencies": { "parcel-bundler": "^1.12.4" }, "devDependencies": { "eslint": "^7.32.0", "stylelint": "^13.13.1" } }

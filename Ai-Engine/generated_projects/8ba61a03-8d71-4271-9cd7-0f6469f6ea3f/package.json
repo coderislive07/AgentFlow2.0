@@ -1,0 +1,15 @@
+{
+  "name": "portfolio",
+  "version": "1.0.0",
+  "description": "Personal portfolio website",
+  "scripts": {
+    "test": "jest",
+    "deploy": "gh-pages -d ."
+  },
+  "dependencies": {
+    "gh-pages": "^4.0.0"
+  },
+  "devDependencies": {
+    "jest": "^27.0.0"
+  }
+}
