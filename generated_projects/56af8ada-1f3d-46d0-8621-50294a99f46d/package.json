@@ -1,0 +1,18 @@
+{
+  "name": "generated-project-56af8ada-1f3d-46d0-8621-50294a99f46d",
+  "version": "1.0.0",
+  "description": "Generated project for: Test backend connectivity...",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "jest"
+  },
+  "keywords": [
+    "generated",
+    "ai",
+    "agentflow"
+  ],
+  "author": "AgentFlow AI",
+  "license": "MIT"
+}

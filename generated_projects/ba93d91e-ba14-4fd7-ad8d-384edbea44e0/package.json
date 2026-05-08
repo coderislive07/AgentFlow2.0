@@ -1,0 +1,18 @@
+{
+  "name": "generated-project-ba93d91e-ba14-4fd7-ad8d-384edbea44e0",
+  "version": "1.0.0",
+  "description": "Generated project for: Hi...",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "jest"
+  },
+  "keywords": [
+    "generated",
+    "ai",
+    "agentflow"
+  ],
+  "author": "AgentFlow AI",
+  "license": "MIT"
+}

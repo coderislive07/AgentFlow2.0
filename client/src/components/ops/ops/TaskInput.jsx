@@ -23,12 +23,13 @@ export function TaskInput() {
 
     try {
       setIsLoading(true);
-      setTask(input);
-      setStatus('running');
       reset();
+      setTask(input);
+      setStatus('pending');
 
       const { taskId: newTaskId } = await submitTask(input);
       setTaskId(newTaskId);
+      setStatus('running');
       setIsLoading(false);
     } catch (error) {
       console.error('Error submitting task:', error);

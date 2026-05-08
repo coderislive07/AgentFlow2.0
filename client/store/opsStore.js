@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 
 const initialAgents = {
-  planner: { name: 'PlanZilla', role: 'Strategic Planner', status: 'idle', output: null },
+  planner: { name: 'Planzilla', role: 'Strategic Planner', status: 'idle', output: null },
   researcher: { name: 'QueryLyn', role: 'Research Specialist', status: 'idle', output: null },
-  coder: { name: 'CodeWizard', role: 'Code Generation', status: 'idle', output: null },
+  developer: { name: 'CodeWizard', role: 'Full-Stack Developer', status: 'idle', output: null },
   tester: { name: 'BugBuster', role: 'QA & Testing', status: 'idle', output: null },
   reporter: { name: 'DataBard', role: 'Report Generator', status: 'idle', output: null },
 };
@@ -72,7 +72,7 @@ export const useOpsStore = create((set) => ({
   updateFromServer: (data) =>
     set({
       status: data.status,
-      logs: data.logs || [],
+      logs: [...(data.logs || [])],
       agents: data.agentStatus || initialAgents,
       output: data.output || {},
     }),

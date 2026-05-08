@@ -22,22 +22,9 @@ export function useTaskPolling(taskId) {
       try {
         const data = await getTaskStatus(taskId);
 
-        const agents = {};
-        if (data.agentStatus) {
-          Object.entries(data.agentStatus).forEach(([key, agent]) => {
-            agents[key] = {
-              name: agent.output?.name || agent.output || 'Unknown',
-              role: agent.output?.role || 'Agent',
-              status: agent.status,
-              output: agent.output,
-            };
-          });
-        }
+        const agents = data.agentStatus || {};
 
-        updateFromServer({
-          ...data,
-          agentStatus: agents,
-        });
+        updateFromServer(data);
 
         if (data.status === 'completed' || data.status === 'failed') {
           setStatus(data.status === 'completed' ? 'completed' : 'failed');

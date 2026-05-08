@@ -12,7 +12,7 @@ class Logger:
     def info(self, message):
         self.log("INFO", message)
 
-    def error(self, message):
+    def error(self, message, **kwargs):
         self.log("ERROR", message)
 
     def debug(self, message):
