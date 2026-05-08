@@ -112,7 +112,6 @@ class LLMClient:
                 model="command-xlarge-nightly",
                 message=prompt,
                 temperature=temperature,
-                timeout=20
                 )                   
                 return response.text.strip()
             except Exception as err:

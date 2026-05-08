@@ -4,11 +4,20 @@ import { useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { useOpsStore } from '@/store/opsStore';
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+const SOCKET_URL =
+  process.env.NEXT_PUBLIC_SOCKET_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  'http://localhost:5001';
 
 export function useSocket(taskId) {
   const socketRef = useRef();
-  const { updateFromServer, setStatus, addLog, updateAgentStatus } = useOpsStore();
+
+  const {
+    updateFromServer,
+    setStatus,
+    addLog,
+    updateAgentStatus,
+  } = useOpsStore();
 
   useEffect(() => {
     if (!taskId) {
@@ -19,58 +28,107 @@ export function useSocket(taskId) {
       return;
     }
 
-    // Create socket connection
-    socketRef.current = io(SOCKET_URL);
+    console.log('Connecting socket for task:', taskId);
+
+    socketRef.current = io(SOCKET_URL, {
+      transports: ['websocket'],
+    });
 
     socketRef.current.on('connect', () => {
-      console.log('Connected to server');
+      console.log('Socket connected');
+
       socketRef.current.emit('join-task', taskId);
     });
 
     socketRef.current.on('disconnect', () => {
-      console.log('Disconnected from server');
+      console.log('Socket disconnected');
     });
 
-    // Listen for task updates
+    /**
+     * TASK UPDATE
+     */
     socketRef.current.on('task-update', (data) => {
-      console.log('Received task update:', data);
+      console.log('TASK UPDATE:', data);
+
       updateFromServer(data);
     });
 
-    // Listen for agent status updates
-    socketRef.current.on('agent-status-update', (data) => {
-      console.log('Received agent status update:', data);
-      updateAgentStatus(data.agent, data.status, data.output);
-    });
+    /**
+     * TASK PROGRESS
+     */
+    socketRef.current.on('task-progress', (data) => {
+      console.log('TASK PROGRESS:', data);
 
-    // Listen for log updates
-    socketRef.current.on('log-update', (data) => {
-      console.log('Received log update:', data);
-      addLog(data.timestamp, data.agent, data.message);
-    });
-
-    // Listen for task completion
-    socketRef.current.on('task-completed', (data) => {
-      console.log('Task completed:', data);
-      setStatus('completed');
       updateFromServer(data);
     });
 
-    // Listen for task failure
-    socketRef.current.on('task-failed', (data) => {
-      console.log('Task failed:', data);
-      setStatus('failed');
-      updateFromServer(data);
+    /**
+     * AGENT STATUS
+     */
+    socketRef.current.on(
+      'agent-status-update',
+      (data) => {
+        console.log(
+          'AGENT STATUS UPDATE:',
+          data
+        );
+
+        updateAgentStatus(
+          data.agent.toLowerCase(),
+          data.status,
+          data.output
+        );
+      }
+    );
+
+    /**
+     * LOG EVENTS
+     */
+    socketRef.current.on('agent-log', (data) => {
+      console.log('AGENT LOG:', data);
+
+      addLog(
+        data.timestamp,
+        data.agent.toLowerCase(),
+        data.message
+      );
     });
+
+    /**
+     * WORKFLOW COMPLETE
+     */
+    socketRef.current.on(
+      'workflow-complete',
+      (data) => {
+        console.log(
+          'WORKFLOW COMPLETE:',
+          data
+        );
+
+        setStatus(data.status);
+
+        updateFromServer(data);
+      }
+    );
 
     return () => {
+      console.log(
+        'Cleaning socket for task:',
+        taskId
+      );
+
       if (socketRef.current) {
-        socketRef.current.emit('leave-task', taskId);
+        socketRef.current.emit(
+          'leave-task',
+          taskId
+        );
+
         socketRef.current.disconnect();
+
         socketRef.current = null;
       }
     };
-  }, [taskId, updateFromServer, setStatus, addLog, updateAgentStatus]);
+  }, [taskId]);
 
   return socketRef.current;
 }

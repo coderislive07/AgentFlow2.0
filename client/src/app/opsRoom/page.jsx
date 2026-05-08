@@ -38,8 +38,29 @@ const statusMap = {
 
 function normalizeStatus(status) {
   if (!status) return "idle"
-  if (["todo", "pending", "idle"].includes(status)) return "todo"
-  if (status === "done") return "completed"
+
+  if (
+    status === "done" ||
+    status === "completed"
+  ) {
+    return "completed"
+  }
+
+  if (
+    status === "running" ||
+    status === "in-progress"
+  ) {
+    return "running"
+  }
+
+  if (
+    status === "todo" ||
+    status === "pending" ||
+    status === "idle"
+  ) {
+    return "todo"
+  }
+
   return status
 }
 
@@ -117,7 +138,6 @@ export default function OpsRoom() {
   const [showNewChat, setShowNewChat] = useState(false)
   const [selectedAgents, setSelectedAgents] = useState([])
 
-  useTaskPolling(taskId)
   useSocket(taskId)
 
   useEffect(() => {
@@ -154,24 +174,53 @@ export default function OpsRoom() {
   }
 
   /* -------- DERIVE TASKS FROM REAL LOGS -------- */
-  const tasks = agents.map((agent) => {
-    const agentLogs = logs.filter(
-      (l) => l.agent.toLowerCase() === agent.id.toLowerCase()
-    )
-    const agentState = agentStatus?.[agent.id]
-    const normalized = normalizeStatus(agentState?.status)
+const tasks = agents.map((agent) => {
 
-    return {
-      id: agent.id,
-      title: agentLogs[0]?.message || "Waiting to start…",
-      description: agentLogs.at(-1)?.message || agentState?.output || "",
-      status: normalized === "completed" ? "completed" : normalized === "running" ? "in-progress" : "todo",
-      assignedTo: agent.displayName,
-      output: agentState?.output || "",
-      badge: badgeStyle(normalized),
-      timestamp: agentLogs.at(-1)?.timestamp || "",
-    }
+  const agentState = agentStatus?.[agent.id]
+
+  const normalized = normalizeStatus(
+    agentState?.status
+  )
+
+  const agentLogs = logs.filter((l) => {
+    const name = l.agent?.toLowerCase() || ""
+
+    return (
+      name.includes(agent.id.toLowerCase()) ||
+      name.includes(agent.displayName.toLowerCase()) ||
+      name.includes(agent.role.toLowerCase())
+    )
   })
+
+  return {
+    id: agent.id,
+
+    title:
+      agentLogs.at(-1)?.message ||
+      `${agent.displayName} is processing...`,
+
+    description:
+      typeof agentState?.output === "string"
+        ? agentState.output
+        : JSON.stringify(agentState?.output || ""),
+
+    status:
+      normalized === "completed"
+        ? "completed"
+        : normalized === "running"
+        ? "in-progress"
+        : "todo",
+
+    assignedTo: agent.displayName,
+
+    output: agentState?.output || "",
+
+    badge: badgeStyle(normalized),
+
+    timestamp:
+      agentLogs.at(-1)?.timestamp || "",
+  }
+})
 
   const todoTasks = tasks.filter((t) => t.status === "todo")
   const inProgressTasks = tasks.filter((t) => t.status === "in-progress")
