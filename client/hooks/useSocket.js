@@ -28,28 +28,36 @@ export function useSocket(taskId) {
       return;
     }
 
-    console.log('Connecting socket for task:', taskId);
+    console.log('WebSocket: Connecting to', SOCKET_URL, 'for task:', taskId);
 
     socketRef.current = io(SOCKET_URL, {
-      transports: ['websocket'],
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 5,
     });
 
     socketRef.current.on('connect', () => {
-      console.log('Socket connected');
+      console.log('WebSocket: Connected with ID:', socketRef.current?.id);
 
       socketRef.current.emit('join-task', taskId);
+      console.log('WebSocket: Joined task:', taskId);
     });
 
-    socketRef.current.on('disconnect', () => {
-      console.log('Socket disconnected');
+    socketRef.current.on('disconnect', (reason) => {
+      console.log('WebSocket: Disconnected -', reason);
+    });
+
+    socketRef.current.on('connect_error', (error) => {
+      console.error('WebSocket: Connection error -', error.message);
     });
 
     /**
      * TASK UPDATE
      */
     socketRef.current.on('task-update', (data) => {
-      console.log('TASK UPDATE:', data);
-
+      console.log('🔌 WS task-update:', data);
       updateFromServer(data);
     });
 
@@ -57,8 +65,7 @@ export function useSocket(taskId) {
      * TASK PROGRESS
      */
     socketRef.current.on('task-progress', (data) => {
-      console.log('TASK PROGRESS:', data);
-
+      console.log('🔌 WS task-progress:', data);
       updateFromServer(data);
     });
 
@@ -68,11 +75,7 @@ export function useSocket(taskId) {
     socketRef.current.on(
       'agent-status-update',
       (data) => {
-        console.log(
-          'AGENT STATUS UPDATE:',
-          data
-        );
-
+        console.log('🔌 WS agent-status-update:', data);
         updateAgentStatus(
           data.agent.toLowerCase(),
           data.status,
@@ -85,8 +88,7 @@ export function useSocket(taskId) {
      * LOG EVENTS
      */
     socketRef.current.on('agent-log', (data) => {
-      console.log('AGENT LOG:', data);
-
+      console.log('🔌 WS agent-log:', data);
       addLog(
         data.timestamp,
         data.agent.toLowerCase(),
@@ -100,22 +102,14 @@ export function useSocket(taskId) {
     socketRef.current.on(
       'workflow-complete',
       (data) => {
-        console.log(
-          'WORKFLOW COMPLETE:',
-          data
-        );
-
+        console.log('🔌 WS workflow-complete:', data);
         setStatus(data.status);
-
         updateFromServer(data);
       }
     );
 
     return () => {
-      console.log(
-        'Cleaning socket for task:',
-        taskId
-      );
+      console.log('WebSocket: Cleaning up for task:', taskId);
 
       if (socketRef.current) {
         socketRef.current.emit(
@@ -124,11 +118,10 @@ export function useSocket(taskId) {
         );
 
         socketRef.current.disconnect();
-
         socketRef.current = null;
       }
     };
-  }, [taskId]);
+  }, [taskId, updateFromServer, setStatus, addLog, updateAgentStatus]);
 
   return socketRef.current;
 }

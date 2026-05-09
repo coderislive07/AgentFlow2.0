@@ -1,0 +1,18 @@
+{
+  "name": "generated-project-968ce7a7-2929-4771-a3b3-6275a4073730",
+  "version": "1.0.0",
+  "description": "Generated project for: Build a portfolio website for me , my name is Mrid...",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "jest"
+  },
+  "keywords": [
+    "generated",
+    "ai",
+    "agentflow"
+  ],
+  "author": "AgentFlow AI",
+  "license": "MIT"
+}

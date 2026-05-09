@@ -23,12 +23,20 @@ export function TaskInput() {
 
     try {
       setIsLoading(true);
-      setTask(input);
-      setStatus('running');
+      // Reset state first to clear any previous task data
       reset();
+      
+      // Then set new task info
+      setTask(input);
+      setStatus('pending');
 
+      // Submit task to backend
       const { taskId: newTaskId } = await submitTask(input);
+      
+      // Update store with new task ID and status
       setTaskId(newTaskId);
+      setStatus('running');
+      
       setIsLoading(false);
     } catch (error) {
       console.error('Error submitting task:', error);

@@ -5,7 +5,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Plus } from "lucide-react"
 
-import { useOpsStore } from "../../../store/opsStore"
+import { useOpsStore } from "../../store/opsStore"
 import { submitTask } from "@/services/api"
 import { useTaskPolling } from "@/hooks/useTaskPolling"
 import { useSocket } from "@/hooks/useSocket"
@@ -82,8 +82,8 @@ function Section({ title, tasks, completed }) {
               <p className={`text-white ${completed ? "line-through opacity-70" : ""}`}>
                 {t.assignedTo}
               </p>
-              <span className={`text-xs font-semibold ${t.status === "completed" ? "text-emerald-300" : t.status === "in-progress" ? "text-sky-300" : "text-slate-400"}`}>
-                {t.status === "completed" ? "Completed" : t.status === "in-progress" ? "Running" : "Waiting"}
+              <span className={`text-xs font-semibold ${t.status === "completed" ? "text-emerald-300" : t.status === "running" ? "text-sky-300" : "text-slate-400"}`}>
+                {t.status === "completed" ? "Completed" : t.status === "running" ? "Running" : "Waiting"}
               </span>
             </div>
             <p className="text-xs text-blue-300">{t.description}</p>
@@ -121,28 +121,36 @@ export default function OpsRoom() {
   const router = useRouter()
   const logsEndRef = useRef(null)
 
-  const {
-    taskId,
-    status,
-    logs,
-    agents: agentStatus,
-    setTask,
-    setTaskId,
-    setStatus,
-    reset,
-  } = useOpsStore()
+  // Subscribe to store with individual selectors for proper reactivity
+  const taskId = useOpsStore((state) => state.taskId)
+  const status = useOpsStore((state) => state.status)
+  const logs = useOpsStore((state) => state.logs)
+  const agentStatus = useOpsStore((state) => state.agents)
+  const setTask = useOpsStore((state) => state.setTask)
+  const setTaskId = useOpsStore((state) => state.setTaskId)
+  const setStatus = useOpsStore((state) => state.setStatus)
+  const reset = useOpsStore((state) => state.reset)
 
   const [taskInput, setTaskInput] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [followUpInput, setFollowUpInput] = useState("")
   const [showNewChat, setShowNewChat] = useState(false)
   const [selectedAgents, setSelectedAgents] = useState([])
 
   useSocket(taskId)
+  // Fallback polling if WebSocket fails
+  useTaskPolling(taskId)
 
   useEffect(() => {
-    logsEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [logs])
+    console.log('🎨 Render: opsRoom updated with:', {
+      taskId,
+      status,
+      logsCount: logs.length,
+      agentStatuses: Object.entries(agentStatus || {}).map(([k, v]) => ({ [k]: v.status })),
+    });
+    if (logsEndRef.current) {
+      logsEndRef.current.scrollIntoView({ behavior: "smooth" })
+    }
+  }, [logs, status, taskId, agentStatus])
 
   const toggleAgent = (id) => {
     setSelectedAgents((prev) =>
@@ -155,18 +163,34 @@ export default function OpsRoom() {
     if (!taskInput.trim()) return
 
     try {
+      console.log('📝 Submitting task:', taskInput.trim());
       setIsSubmitting(true)
+      // Reset state first
       reset()
+      
+      // Then set new task info
       setTask(taskInput.trim())
       setStatus("pending")
 
-      const { taskId: newTaskId } = await submitTask(taskInput.trim())
+      // Submit to backend
+      const response = await submitTask(taskInput.trim())
+      console.log('📝 Task submitted, response:', response);
+      const newTaskId =
+      response.taskId || response.task_id
+
+      console.log(
+      "REAL TASK ID:",
+      newTaskId
+      )
+      
+      // Update with task ID and status
+      console.log('📝 Setting new taskId:', newTaskId);
       setTaskId(newTaskId)
       setStatus("running")
       setTaskInput("")
       setShowNewChat(false)
     } catch (err) {
-      console.error(err)
+      console.error('Error submitting task:', err)
       setStatus("failed")
     } finally {
       setIsSubmitting(false)
@@ -204,12 +228,7 @@ const tasks = agents.map((agent) => {
         ? agentState.output
         : JSON.stringify(agentState?.output || ""),
 
-    status:
-      normalized === "completed"
-        ? "completed"
-        : normalized === "running"
-        ? "in-progress"
-        : "todo",
+    status: normalized,
 
     assignedTo: agent.displayName,
 
@@ -223,7 +242,7 @@ const tasks = agents.map((agent) => {
 })
 
   const todoTasks = tasks.filter((t) => t.status === "todo")
-  const inProgressTasks = tasks.filter((t) => t.status === "in-progress")
+  const inProgressTasks = tasks.filter((t) => t.status === "running")
   const completedTasks = tasks.filter((t) => t.status === "completed")
 
   /* ---------------- UI ---------------- */
@@ -372,8 +391,8 @@ const tasks = agents.map((agent) => {
                           <p className="text-white font-semibold">{task.assignedTo}</p>
                           <p className="mt-1 text-sm text-slate-400">{task.title}</p>
                         </div>
-                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${task.status === "completed" ? "bg-emerald-500/15 text-emerald-200" : task.status === "in-progress" ? "bg-sky-500/15 text-sky-200" : "bg-slate-700/20 text-slate-300"}`}>
-                          {task.status === "completed" ? "Completed" : task.status === "in-progress" ? "Running" : "Waiting"}
+                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${task.status === "completed" ? "bg-emerald-500/15 text-emerald-200" : task.status === "running" ? "bg-sky-500/15 text-sky-200" : "bg-slate-700/20 text-slate-300"}`}>
+                          {task.status === "completed" ? "Completed" : task.status === "running" ? "Running" : "Waiting"}
                         </span>
                       </div>
                       <p className="mt-3 text-sm text-slate-400">{task.description || "Awaiting agent activity..."}</p>
